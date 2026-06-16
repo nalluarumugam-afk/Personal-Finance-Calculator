@@ -1,0 +1,195 @@
+from datetime import datetime
+import matplotlib.pyplot as plt
+import json
+import os
+import random
+
+class Personal_Finance:
+    def _init_(self):
+        self.file = "personal_account.txt"
+        self.datas = self.load_datas()
+        sno = self.sno_counter
+        self.sno_counter = random.randint(100000 , 9999)
+
+    def load_datas(self):
+        datas = []
+        self.file = "personal_account.txt"
+        if not os.path.exists(self.file):
+            return datas
+        try:
+            with open(self.file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        datas.append(json.loads(line))
+        except FileNotFoundError:
+            datas = []
+        return datas
+
+    def save_datas(self):
+        with open(self.file, "w", encoding="utf-8") as f:
+            for data in self.datas:
+                f.write(json.dumps(data, ensure_ascii=False) + "\n")
+            
+    def create_account(self):
+        name = input("Enter your name: ").strip()
+        self.sno_counter = random.randint(10000,100000)
+        sno = self.sno_counter 
+        self.datas = self.load_datas()
+        
+        new_acc = {
+            "name": name,
+            "sno": sno,
+            "income": 0,
+            "expenses": [],
+            "savings": 0
+        }
+        self.datas.append(new_acc)
+        self.save_datas()
+        print(f"\nAccount created!, Your SNO: {sno}")
+        return sno
+
+    def add_data(self):
+        self.datas = self.load_datas()
+        try:
+            sno = int(input("Enter your SNO number: "))
+        except ValueError:
+            print("Enter valid number !")
+            return
+
+        acc = next((a for a in self.datas if a['sno'] == sno), None)
+        if not acc:
+            print("Account not found!")
+            return
+
+        income = int(input("Enter your monthly income: "))
+        expense_type = input("Expense type - Grocery / Entertainment / Travel / Education / Hotel / Medical / Other: ").strip()
+        amount = int(input(f"Enter the expense for {expense_type}: "))
+        savings = int(input("Enter the savings for this month: "))
+
+        now = datetime.now()
+        month = now.strftime("%b  %Y")
+        year = now.year
+        
+        
+        acc['income'] = income
+        acc['savings'] = savings
+        acc['expenses'].append({
+            "type": expense_type,
+            "amount": amount,
+            "month":month,
+            "year":year
+
+            })
+        
+        self.save_datas()
+        print("Data saved successfully!")
+
+    def show_my_account(self):
+        self.datas = self.load_datas()
+        try:
+            sno = int(input("Enter your SNO number: "))
+        except ValueError:
+            print("Enter valid number !")
+            return
+
+        acc = next((a for a in self.datas if a['sno'] == sno), None)
+        if not acc :
+            print("Account not found!")
+            return
+
+        total_expense = sum(e['amount'] for e in acc['expenses'])
+        print()
+        print("*"*32)
+        print("ACCOUNT :")
+        print(f"Name     : {acc['name']}")
+        print(f"SNO      : {acc['sno']}")
+        print(f"Income   : ₹{acc['income']:,}")
+        print(f"Savings  : ₹{acc['savings']:,}")
+        print(f"Expenses : ₹{total_expense:,}")
+        print("Expense Details:")
+        for e in acc['expenses']:
+            print(f"  - {e['type']}: ₹{e['amount']:,}")
+        print("*"*32)
+        print()
+
+    def show_expense_chart(self):
+        self.datas = self.load_datas()
+        try:
+            sno = int(input("Enter your SNO number: "))
+        except ValueError:
+            print("Enter the valid SNO number !")
+            return
+
+        acc = next((a for a in self.datas if a['sno'] == sno), None)
+        if not acc or not acc['expenses']:
+            print("No expense data found!")
+            return
+
+        expense_dict = {}
+        for e in acc['expenses']:
+            expense_dict[e['type']] = expense_dict.get(e['type'], 0) + e['amount']
+
+        labels = list(expense_dict.keys())
+        amounts = list(expense_dict.values())
+
+        plt.figure(figsize=(7, 7))
+        plt.pie(amounts, labels=labels, autopct='%1.1f%%', startangle=140)
+        plt.title(f"{acc['name']} - Expense Distribution", fontsize=14, fontweight='bold')
+        plt.axis('equal')
+        plt.show()
+
+    def show_income_chart(self):
+        self.datas = self.load_datas()
+        try:
+            sno = int(input("Enter your SNO number: "))
+        except ValueError:
+            print("Enter the valid SNO number !")
+            return
+
+        acc = next((a for a in self.datas if a['sno'] == sno), None)
+        if not acc:
+           print("Account not found!")
+           return
+
+        total_expense = sum(e['amount'] for e in acc['expenses'])
+    
+        categories = ['Income', 'Savings', 'Expenses']
+        values = [acc['income'], acc['savings'], total_expense]
+        colors = ['#2ecc71', '#3498db', '#e74c3c']
+
+        plt.figure(figsize=(8, 5))
+        plt.bar(categories, values, color=colors)
+        plt.title(f"{acc['name']} - Income vs Savings vs Expenses", fontsize=14, fontweight='bold')
+        plt.ylabel("Amount ₹")
+        for i, v in enumerate(values):
+            plt.text(i, v + 100, f"₹{v:,}", ha='center', fontweight='bold')
+        plt.show()
+
+    def show_yearly_expense(self):
+        self.datas = self.load_datas()
+        try:
+           sno = int(input("Enter your SNO number: "))
+        except ValueError:
+           print("Enter the valid SNO number !")
+           return
+
+        acc = next((a for a in self.datas if a['sno'] == sno), None)
+        if not acc or not acc['expenses']:
+            print("No expense data found!")
+            return
+
+
+        yearly_dict = {}
+        for e in acc['expenses']:
+            y = e.get('year', 'Unknown')
+            yearly_dict[y] = yearly_dict.get(y, 0) + e['amount']
+
+        years = [str(y) for y in yearly_dict.keys()]
+        amounts = list(yearly_dict.values())
+
+        plt.figure(figsize=(7, 7))
+        plt.pie(amounts, labels=years, autopct='%1.1f%%', startangle=90, colors=['#1abc9c', '#3498db', '#9b59b6', '#e67e22'])
+        plt.title(f"{acc['name']} - Yearly Expense Distribution", fontsize=14, fontweight='bold')
+        plt.axis('equal')
+        plt.show()
