@@ -1,0 +1,44 @@
+from sample import sample_calculator
+from personal_finance import Personal_Finance
+
+def main():
+    print("*"*55)
+    print("      PERSONAL FINANCE ANALYSER")
+    print("*"*55)
+
+    print("1.personal finance calculator  2.show sample  3.exit")
+    while True:
+        print()
+        option = input("Enter the option :")
+        if option == "1":
+            s = Personal_Finance()
+            print("1.create account , 2.add data , 3.show my account , 4.show expense chart")
+            print("5. show income chart , 6.show expenses chart(yearly)")
+            n = input("Enter your option:")
+            if n == "1":
+                s.create_account()
+            elif n == "2":
+                s.add_data()
+            elif n == "3":
+                s.show_my_account()
+            elif n == "4":
+                s.show_expense_chart()
+            elif n == "5":
+                s.show_income_chart()
+            elif n == "6":
+                s.show_yearly_expense()
+            elif n == "7":
+                print("exiting from your own account !")
+            else:
+                print("Invalid option !")
+                
+            
+        elif option == "2":
+            print(sample_calculator())
+        elif option == "3":
+           print("EXIT !")
+           break
+  
+        else:
+           print("ïnvalid option!")             
+main()
